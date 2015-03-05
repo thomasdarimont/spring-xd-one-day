@@ -1,0 +1,70 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;4.&nbsp;Advanced Streams</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.70.0"><link rel="start" href="index.html" title="Spring XD - Lab Documentation"><link rel="up" href="index.html" title="Spring XD - Lab Documentation"><link rel="prev" href="customizing-streams-lab.html" title="Chapter&nbsp;3.&nbsp;Customizing Streams"><link rel="next" href="introduction-to-jobs-lab.html" title="Chapter&nbsp;5.&nbsp;Introduction to Jobs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div xmlns="http://www.w3.org/TR/xhtml1/transitional" style="background-color:white;border:none;height:73px;border:1px solid black;"><a style="border:none;" href="http://www.pivotal.io" title="Pivotal"><img style="border:none;" src="images/heading-logo-lhs.jpg"></img></a><a style="border:none;" href="http://www.spring.io" title="The Spring Framework"><img style="border:none;position:absolute;padding-top:5px;right:42px;" src="images/heading-logo-rhs.jpg"></img></a></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="advanced-streams-lab"></a>Chapter&nbsp;4.&nbsp;Advanced Streams</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="advanced-streams-lab-objective"></a>4.1.&nbsp;Objective</h2></div></div></div><p>To explore some of the advanced Spring XD stream capabilities.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="advanced-streams-lab-transform-processor"></a>4.2.&nbsp;Transform Processor</h2></div></div></div><p>Let's begin by creating a stream to examine the use of the transform processor.  First, we will examine using
+			  Spring Expression Language, then we will use a Groovy script.</p><div class="orderedlist"><ol type="1" compact><li><p>Open a Spring XD shell that is connected to your running server.  Create and deploy stream that uses an
+					  HTTP source, a transform processor that converts the payload to upper case, and a sink that logs
+					  the result to the console.</p><pre class="programlisting">xd:&gt;stream create --name myTransform --definition "http | transform --expression='payload.toUpperCase()' | log" --deploy
+Created and deployed new stream 'myTransform'
+xd:&gt;</pre></li><li><p>Test the stream by posting some data to it, verify the payload is transformed correctly.</p><pre class="programlisting">xd:&gt;http post --target "http://localhost:9000" --data "Hello World"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9000 Hello World
+&gt; 200 OK
+
+xd:&gt;</pre><p>You should observe the following output in the Spring XD server console window:</p><pre class="programlisting">14:48:48,928 1.1.0.RC1  INFO pool-11-thread-4 sink.myTransform - HELLO WORLD</pre></li><li><p>Now lets's see how to accomplish the same task using a groovy script.  Paste the
+					  following text into a script called <code class="code">myUpperCase.groovy</code></p><pre class="programlisting">return payload.toUpperCase()</pre><p>Create a <code class="code">scripts</code> subdirectory in your user home directory, and save the
+					  script there.  (Recall that we could have placed the script into the 
+					  <code class="code">${xd.home}/modules/processor/scripts</code> directory, but remember that directory
+					  would disappear during an upgrade of Spring XD and we'd have to copy script into the 
+					  new installation.</p></li><li><p>Now, from the Spring XD shell, go ahead and create a new stream that
+					  uses the script.  Don't forget to change the stream name and the HTTP port.</p><pre class="programlisting">xd:&gt;stream create --name myGroovyTransformer --definition "http --port=9001|
+				 transform --script=file:/Users/dbuchko/myUpperCase.groovy | log" --deploy
+Created and deployed new stream 'myGroovyTransformer'
+xd:&gt;</pre></li><li><p>Post some data to the stream.</p><pre class="programlisting">xd:&gt;http post --target "http://localhost:9001" --data "Hello World"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9001 Hello World
+&gt; 200 OK
+
+xd:&gt;</pre><p>Verify the payload was converted to upper case in the Spring XD server console log.</p></li><li><p>When you are finished, delete both streams from the Spring XD server.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="advanced-streams-lab-tcp-source"></a>4.3.&nbsp;TCP Source</h2></div></div></div><p>Let's try creating a stream now using the TCP source.  The TCP source comes with several decoders
+			  to frame messages.</p><div class="orderedlist"><ol type="1" compact><li><p>First, create a basic stream consisting of a TCP source, that writes to the log sink.</p><pre class="programlisting">xd:&gt;	stream create --name tcptest --definition "tcp --port=3000 --outputType=text/plain | log" --deploy
+Created and deployed new stream 'tcptest'
+xd:&gt;</pre></li><li><p>Open a new OS command shell (terminal window on OSX, command prompt on Windows, or SSH session in Linux).
+					  Launch the telnet utility from the shell, as follows:</p><pre class="programlisting">$ telnet localhost 3000
+Trying ::1...
+Connected to localhost.
+Escape character is '^]'.
+</pre><p>Note that on Windows, while you use the same command to launch telnet, your screen will clear and you
+will be left with a flashing cursor in the upper left corner of the screen.</p><p>Type some characters, and press 'Enter'.  Observe the output of the Spring XD server console - you should
+					  see the typed characters logged to the console, but only after you've hit 'Enter', which sends
+					  CRLF to the TCP source, and causes the buffered characters to be sent to the log sink.</p><p>When you have finished experimenting with the stream, type &lt;CTRL-]&gt;, then <code class="code">close</code>.
+					  On OSX, this will result in the closing of the telnet session.  On Windows, you will still have to
+					  enter <code class="code">quit</code> to close the utility.</p><p>Note: if telnet is not installed on your windows machine enter the
+					  following from commandline: <code class="code">pkgmgr /iu:"TelnetClient"</code> and hit return.  (this should install the telnet client)
+				</p></li><li><p>Destroy the stream once you are finished.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="customizing-streams-lab-composite-module"></a>4.4.&nbsp;Creating a Composite Module</h2></div></div></div><p>Composite modules can provide a level of re-usable components in Spring XD.
+			  This exercise will demonstrate how to create, register, and use a composite module.</p><div class="orderedlist"><ol type="1" compact><li><p>Let's create a re-usable composite module, <code class="code">errorLogger</code>, that will log streams containing the word
+				'error', regardless of case.  Hint: use the filter processor.</p><p>You should end up with a command similar to:</p><pre class="programlisting">xd:&gt;module compose errorLogger --definition "filter --expression=payload.toUpperCase().contains('ERROR') | log"
+Successfully created module 'errorLogger' with type sink
+xd:&gt;</pre><p>Verify the module has been created successfully, by listing all the modules <code class="code">module list</code>.  Does this
+					  module appear as a source, sink, or processor?  Is there any indication in the module list
+					  output that this is a composite module?</p></li><li><p>Now let's go ahead and demonstrate how to use this module.  Create 2 streams, <code class="code">s1</code> and
+					  <code class="code">s2</code>, that receive HTTP posts on different ports and send them to the composite module.</p><pre class="programlisting">xd:&gt;stream create --name s1 --definition "http --port=9090 | errorLogger" --deploy
+Created and deployed new stream 's1'
+xd:&gt;stream create --name s2 --definition "http --port=9095 | errorLogger" --deploy
+Created and deployed new stream 's2'
+xd:?</pre></li><li><p>Test the composite module by posting some data to each of the ports the streams are listening on.
+					  Try different combinations, and observe which posts get logged.</p><pre class="programlisting">xd:&gt;http post --target http://localhost:9090 --data "Error"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9090 Error
+&gt; 200 OK
+
+xd:&gt;http post --target http://localhost:9090 --data "Warning"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9090 Warning
+&gt; 200 OK
+
+xd:&gt;http post --target http://localhost:9095 --data "Warning"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9095 Warning
+&gt; 200 OK
+
+xd:&gt;http post --target http://localhost:9095 --data "error"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9095 error
+&gt; 200 OK
+
+xd:&gt;</pre></li><li><p>Remove the composite module from Spring XD using the <code class="code">module delete</code> command.
+					  Did the command complete successfully?  Note the results, and take appropriate action to
+					  delete the composite module.</p></li></ol></div></div></div><div xmlns="http://www.w3.org/TR/xhtml1/transitional" class="navfooter"><hr></hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="customizing-streams-lab.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="introduction-to-jobs-lab.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;3.&nbsp;Customizing Streams&nbsp;</td><td width="20%" align="center"><span style="color:white;font-size:90%;"><a href="http://www.spring.io" title="The Spring Framework">Spring By Pivotal</a></span></td><td width="40%" align="right" valign="top">&nbsp;Chapter&nbsp;5.&nbsp;Introduction to Jobs</td></tr></table></div></body></html>

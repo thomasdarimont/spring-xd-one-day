@@ -1,0 +1,192 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;8.&nbsp;Installing Spring XD in Distributed Mode</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.70.0"><link rel="start" href="index.html" title="Spring XD - Lab Documentation"><link rel="up" href="index.html" title="Spring XD - Lab Documentation"><link rel="prev" href="advanced-jobs-lab.html" title="Chapter&nbsp;7.&nbsp;Advanced Jobs"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div xmlns="http://www.w3.org/TR/xhtml1/transitional" style="background-color:white;border:none;height:73px;border:1px solid black;"><a style="border:none;" href="http://www.pivotal.io" title="Pivotal"><img style="border:none;" src="images/heading-logo-lhs.jpg"></img></a><a style="border:none;" href="http://www.spring.io" title="The Spring Framework"><img style="border:none;position:absolute;padding-top:5px;right:42px;" src="images/heading-logo-rhs.jpg"></img></a></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="distributed-mode-lab"></a>Chapter&nbsp;8.&nbsp;Installing Spring XD in Distributed Mode</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="distributed-mode-lab-objective"></a>8.1.&nbsp;Objective</h2></div></div></div><p>To have a functioning version of Spring XD installed and running in distributed mode on your workstation.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="distributed-mode-lab-installation"></a>8.2.&nbsp;Installation</h2></div></div></div><p>As noted previously, Spring XD consists of several components that satisfy different functions.  The 
+			  standalone configuration runs all components in a single container.  In this lab exercise, you will separate
+			  the components and run them independently in distributed mode, which is how you would run Spring XD in a 
+			  production environment.</p><p>The following components will be configured to run independently:</p><div class="itemizedlist"><ul type="disc" compact><li><p>HSQLDB</p></li><li><p>Redis</p></li><li><p>ZooKeeper</p></li><li><p>Spring XD Admin Server</p></li><li><p>Spring XD Container Server</p></li></ul></div><p>Before starting, make a backup copy of the <code class="code">$XD_HOME/config/servers.yml</code> file.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="distributed-mode-lab-hsqldb"></a>8.2.1.&nbsp;Configuring HSQLDB</h3></div></div></div><p>Spring XD supports any JDBC-compliant SQL database, but for demonstration purposes we will use the
+				  standalone HSQLDB instance included with the distribution.</p><p>Change to the <code class="code">hsqldb</code> directory in the Spring XD installation, and start the HSQLDB
+				  server by executing <code class="code">bin/hsqldb-server</code>.</p><pre class="programlisting">Daniels-Mac:hsqldb dbuchko$ bin/hsqldb-server
+[2015-01-08 15:26:52.003] boot - 62533  INFO [main] --- HsqlServerApplication: Starting HsqlServerApplication v1.0.3.RELEASE on Daniels-Mac.local with PID 62533 (/Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd/lib/spring-xd-batch-1.0.3.RELEASE.jar started by dbuchko in /Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/hsqldb)
+[2015-01-08 15:26:52.611] boot - 62533  INFO [main] --- AnnotationConfigApplicationContext: Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@4bccc22d: startup date [Thu Jan 08 15:26:52 EST 2015]; root of context hierarchy
+[2015-01-08 15:26:54.677] boot - 62533  INFO [main] --- XmlBeanDefinitionReader: Loading XML bean definitions from class path resource [org/springframework/xd/batch/hsql-datasource.xml]
+[2015-01-08 15:26:56.269] boot - 62533  INFO [main] --- PropertiesFactoryBean: Loading properties file from URL [jar:file:/Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd/lib/spring-integration-core-4.0.2.RELEASE.jar!/META-INF/spring.integration.default.properties]
+[2015-01-08 15:26:56.286] boot - 62533  INFO [main] --- IntegrationRegistrar: No bean named 'integrationHeaderChannelRegistry' has been explicitly defined. Therefore, a default DefaultHeaderChannelRegistry will be created.
+[2015-01-08 15:26:56.856] boot - 62533  INFO [main] --- DefaultConfiguringBeanFactoryPostProcessor: No bean named 'errorChannel' has been explicitly defined. Therefore, a default PublishSubscribeChannel will be created.
+...
+[2015-01-08 15:27:09.561] boot - 62533  INFO [main] --- HsqlServerApplication: Started HsqlServerApplication in 3.221 seconds (JVM running for 19.929)</pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="distributed-mode-lab-redis"></a>8.2.2.&nbsp;Configuring Redis</h3></div></div></div><p>Spring XD comes with the Redis source code, and an installation script that compiles the code into a binary 
+				  executable.  Note that if you are completing these lab exercises on Windows, you should download and install 
+				  the pre-built version of Redis for Windows that can be found at 
+				  <a href="https://github.com/MSOpenTech/redis/releases" target="_top">https://github.com/MSOpenTech/redis/releases</a>. 
+				  After installing, proceed to starting the Redis server.</p><div class="orderedlist"><ol type="1" compact><li><p>Change to the <code class="code">redis/bin</code> subdirectory under the Spring XD installation,
+						  and execute the <code class="code">install-redis</code> script to extract and build the Redis server.</p><pre class="programlisting">Daniels-Mac:bin dbuchko$ ./install-redis 
+mac64 platform detected.
+cd src &amp;&amp; make all
+rm -rf redis-server redis-sentinel redis-cli redis-benchmark redis-check-dump redis-check-aof *.o *.gcda *.gcno *.gcov redis.info lcov-html
+(cd ../deps &amp;&amp; make distclean)
+(cd hiredis &amp;&amp; make clean) &gt; /dev/null || true
+(cd linenoise &amp;&amp; make clean) &gt; /dev/null || true
+(cd lua &amp;&amp; make clean) &gt; /dev/null || true
+(cd jemalloc &amp;&amp; [ -f Makefile ] &amp;&amp; make distclean) &gt; /dev/null || true
+...
+Hint: To run 'make test' is a good idea ;)
+
+installation script completed.
+Selecting a non-default memory allocator when building Redis is done by setting 
+the MALLOC environment variable. Please refer to /Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/redis/redis-2.8.3/README.
+To start redis server, please run: /Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/redis/bin/redis-server
+Daniels-Mac:bin dbuchko$</pre><p>Validate the build by changing to the Redis directory, and running the <code class="code">make test</code> target.
+						  Look for a message at the end of the tests stating <code class="code">All tests passed without errors!</code>.</p><pre class="programlisting">Daniels-Mac:redis-2.8.3 dbuchko$ make test
+cd src &amp;&amp; make test
+Cleanup: may take some time... OK
+Starting test server at port 11111
+[ready]: 63626
+...
+\o/ All tests passed without errors!
+
+Cleanup: may take some time... OK
+Daniels-Mac:redis-2.8.3 dbuchko$</pre></li><li><p>From the root directory of the Redis installation, start the server by executing the 
+						<code class="code">../bin/redis-server redis.conf</code> binary.  You should observe the server
+						start up, with the ASCII-art appearing and indicating the server is ready to accept connections.</p><pre class="programlisting">Daniels-Mac:redis-2.8.3 dbuchko$ ../bin/redis-server redis.conf 
+[65055] 08 Jan 17:38:47.901 * Max number of open files set to 10032
+                _._                                                  
+           _.-``__ ''-._                                             
+      _.-``    `.  `_.  ''-._           Redis 2.8.3 (00000000/0) 64 bit
+  .-`` .-```.  ```\/    _.,_ ''-._                                   
+ (    '      ,       .-`  | `,    )     Running in stand alone mode
+ |`-._`-...-` __...-.``-._|'` _.-'|     Port: 6379
+ |    `-._   `._    /     _.-'    |     PID: 65055
+  `-._    `-._  `-./  _.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |           http://redis.io        
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |                                  
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+      `-._    `-.__.-'    _.-'                                       
+          `-._        _.-'                                           
+              `-.__.-'                                               
+
+[65055] 08 Jan 17:38:47.903 # Server started, Redis version 2.8.3
+[65055] 08 Jan 17:38:47.903 * The server is now ready to accept connections on port 6379</pre></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="distributed-mode-lab-zookeeper"></a>8.2.3.&nbsp;Manual Installation of ZooKeeper</h3></div></div></div><div class="orderedlist"><ol type="1" compact><li><p>Download a copy of ZooKeeper from the links on this page:
+						  <a href="http://zookeeper.apache.org/releases.html" target="_top">http://zookeeper.apache.org/releases.html</a>.
+						  Extract the archive.</p></li><li><p>In the ZooKeeper <code class="code">bin</code> directory, you will find several shell scripts for starting the 
+						  server and command-line client.  Spring XD contains a sample ZooKeeper configuration file located
+						  in the <code class="code">zookeeper/conf/zoo.cfg</code> that 
+						  is required for starting the server.  To start the server (on OSX or Linux):  
+						  <code class="code">bin/zkServer.sh start-foreground ../spring-xd-1.0.3.RELEASE/zookeeper/conf/zoo.cfg</code>.
+						  (You can also start the server as a background process by passing in <code class="code">start</code> 
+						  instead of <code class="code">start-foregound</code>.)</p><pre class="programlisting">Daniels-Mac:zookeeper-3.4.6 dbuchko$ bin/zkServer.sh start-foreground ../spring-xd-1.0.3.RELEASE/zookeeper/conf/zoo.cfg 
+JMX enabled by default
+Using config: ../spring-xd-1.0.3.RELEASE/zookeeper/conf/zoo.cfg
+2015-01-09 14:56:35,778 [myid:] - INFO  [main:QuorumPeerConfig@103] - Reading configuration from: ../spring-xd-1.0.3.RELEASE/zookeeper/conf/zoo.cfg
+2015-01-09 14:56:35,784 [myid:] - INFO  [main:DatadirCleanupManager@78] - autopurge.snapRetainCount set to 3
+2015-01-09 14:56:35,784 [myid:] - INFO  [main:DatadirCleanupManager@79] - autopurge.purgeInterval set to 0
+2015-01-09 14:56:35,784 [myid:] - INFO  [main:DatadirCleanupManager@101] - Purge task is not scheduled.
+2015-01-09 14:56:35,784 [myid:] - WARN  [main:QuorumPeerMain@113] - Either no config or no quorum defined in config, running  in standalone mode
+2015-01-09 14:56:35,799 [myid:] - INFO  [main:QuorumPeerConfig@103] - Reading configuration from: ../spring-xd-1.0.3.RELEASE/zookeeper/conf/zoo.cfg
+2015-01-09 14:56:35,799 [myid:] - INFO  [main:ZooKeeperServerMain@95] - Starting server
+...
+2015-01-09 16:44:18,531 [myid:] - INFO  [main:ZooKeeperServer@764] - minSessionTimeout set to -1
+2015-01-09 16:44:18,531 [myid:] - INFO  [main:ZooKeeperServer@773] - maxSessionTimeout set to -1
+2015-01-09 16:44:18,546 [myid:] - INFO  [main:NIOServerCnxnFactory@94] - binding to port 0.0.0.0/0.0.0.0:2181
+					</pre></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="distributed-mode-lab-xd-config"></a>8.2.4.&nbsp;Spring XD Configuration</h3></div></div></div><p>Now that the external components are installed and running, it is necessary to configure Spring XD to connect and use them.
+				  Make a backup copy of and open the <code class="code">$XD_HOME/config/servers.yml</code> in your favourite editor.</p><div class="orderedlist"><ol type="1" compact><li><p>First, change the transport from Rabbit to Redis by uncommenting and modifying the xd.transport parameter as shown:</p><pre class="programlisting">#XD data transport (default is redis for distributed, local for single node)
+xd:
+  transport: redis</pre></li><li><p>Configure the HSQLDB connection parameters, in this case the included default values will suffice - it is
+						  necessary to just uncomment the parameters.</p><pre class="programlisting">#Config for use with HSQLDB
+#
+#Change the database host, port and name
+hsql:
+  server:
+    host: localhost
+    port: 9101
+    dbname: xdjob
+#Change database username and password
+spring:
+  datasource:
+    url: jdbc:hsqldb:hsql://${hsql.server.host:localhost}:${hsql.server.port:9101}/${hsql.server.dbname:xdjob}
+    username: sa
+    password:
+    driverClassName: org.hsqldb.jdbc.JDBCDriver
+    validationQuery: select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</pre></li><li><p>Let's also enable the ability to shut down containers from the Admin UI.  Follow the instructions
+						  in the configuration file, and uncomment the parameters.</p><pre class="programlisting"># Config to enable the shutdown button on the UI
+
+#---
+spring:
+  profiles: container
+management:
+  port: 0</pre></li><li><p>Setup the Redis connection parameters, using the default host and port.</p><pre class="programlisting"># Redis properties
+spring:
+  redis:
+   port: 6379
+   host: localhost</pre></li><li><p>Finally, setup the ZooKeeper connection properties.</p><pre class="programlisting"># Zookeeper properties
+# namespace is the path under the root where XD's top level nodes will be created
+# client connect string: host1:port1,host2:port2,...,hostN:portN
+zk:
+  namespace: xd
+  client:
+     connect: localhost:2181</pre><p>Save the configuration file.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="distributed-mode-lab-xd-components"></a>8.2.5.&nbsp;Starting Spring XD</h3></div></div></div><p>Now that you've modified the configuration, you can start up the Spring XD Admin and Container servers.</p><div class="orderedlist"><ol type="1" compact><li><p>Open a new shell, and start the Admin server first by executing the <code class="code">$XD_HOME/bin/xd-admin</code> shell script.</p><pre class="programlisting">aniels-Mac:xd dbuchko$ bin/xd-admin
+
+ _____                           __   _______
+/  ___|          (-)             \ \ / /  _  \
+\ `--. _ __  _ __ _ _ __   __ _   \ V /| | | |
+ `--. \ '_ \| '__| | '_ \ / _` |  / ^ \| | | |
+/\__/ / |_) | |  | | | | | (_| | / / \ \ |/ /
+\____/| .__/|_|  |_|_| |_|\__, | \/   \/___/
+      | |                  __/ |
+      |_|                 |___/
+1.0.3.RELEASE                    eXtreme Data
+
+
+Started : AdminServerApplication
+Documentation: https://github.com/spring-projects/spring-xd/wiki
+
+17:36:07,038 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD Home: /Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd
+17:36:07,039 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Transport: redis
+17:36:07,039 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config location: file:/Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd/config//
+17:36:07,039 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config names: servers,application
+17:36:07,040 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config location: file:/Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd/config//modules/
+17:36:07,041 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config name: modules
+17:36:07,041 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Admin web UI: http://Daniels-Mac.local:9393/admin-ui
+17:36:07,042 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper at: localhost:2181
+17:36:07,042 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper namespace: xd
+17:36:07,042 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Analytics: redis
+17:36:07,207 1.0.3.RELEASE  INFO main server.AdminServerApplication - Started AdminServerApplication in 13.173 seconds (JVM running for 33.143)
+17:36:07,207 1.0.3.RELEASE  INFO LeaderSelector-0 server.DeploymentSupervisor - Leader Admin 192.168.73.128:9393 is watching for stream/job deployment requests.
+17:36:07,347 1.0.3.RELEASE  INFO DeploymentSupervisorCacheListener-0 server.ContainerListener - Path cache event: type=INITIALIZED</pre><p>Open your browser and verify you can navigate to the Spring XD admin page, at <code class="code">http://localhost:9393/admin-ui</code>.</p></li><li><p>Now start up the container server in another shell, by executing <code class="code">$XD_HOME/bin/xd-container</code>.</p><pre class="programlisting">Daniels-Mac:xd dbuchko$ bin/xd-container
+
+ _____                           __   _______
+/  ___|          (-)             \ \ / /  _  \
+\ `--. _ __  _ __ _ _ __   __ _   \ V /| | | |
+ `--. \ '_ \| '__| | '_ \ / _` |  / ^ \| | | |
+/\__/ / |_) | |  | | | | | (_| | / / \ \ |/ /
+\____/| .__/|_|  |_|_| |_|\__, | \/   \/___/
+      | |                  __/ |
+      |_|                 |___/
+1.0.3.RELEASE                    eXtreme Data
+
+
+Started : ContainerServerApplication
+Documentation: https://github.com/spring-projects/spring-xd/wiki
+
+17:41:48,516 1.0.3.RELEASE  INFO main server.ContainerServerApplication - Starting ContainerServerApplication v1.0.3.RELEASE on Daniels-Mac.local with PID 66411 (/Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd/lib/spring-xd-dirt-1.0.3.RELEASE.jar started by dbuchko in /Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd)
+17:41:49,549 1.0.3.RELEASE  INFO main server.ContainerServerApplication - Started ContainerServerApplication in 2.773 seconds (JVM running for 3.877)
+[2015-01-09 17:42:05.165] boot - 66411  INFO [main-SendThread(localhost:2181)] --- ClientCnxn: Opening socket connection to server localhost/0:0:0:0:0:0:0:1:2181. Will not attempt to authenticate using SASL (unknown error)
+[2015-01-09 17:42:05.209] boot - 66411  INFO [main-SendThread(localhost:2181)] --- ClientCnxn: Socket connection established to localhost/0:0:0:0:0:0:0:1:2181, initiating session
+17:42:15,773 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD Home: /Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd
+17:42:15,807 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Transport: redis
+17:42:15,815 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config location: file:/Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd/config//
+17:42:15,816 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config names: servers,application
+17:42:15,816 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config location: file:/Users/dbuchko/Applications/spring-xd-1.0.3.RELEASE/xd/config//modules/
+17:42:15,817 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config name: modules
+17:42:15,817 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Hadoop Distro: hadoop22
+17:42:15,868 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Hadoop version detected from classpath: 2.2.0
+17:42:15,868 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper at: localhost:2181
+17:42:15,870 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper namespace: xd
+17:42:15,871 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Analytics: redis
+17:42:15,999 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: type=INITIALIZED
+17:42:16,004 1.0.3.RELEASE  INFO main server.ContainerRegistrar - Container {groups=, host=Daniels-Mac.local, id=0ecbb231-f156-478a-81dd-569ba5f75acd, ip=192.168.73.128, pid=66411} joined cluster
+17:42:16,562 1.0.3.RELEASE  INFO main server.ContainerServerApplication - Started ContainerServerApplication in 7.507 seconds (JVM running for 30.89)</pre><p>Navigate to the Containers page on the Admin UI, and verify the container appears up and running in the list.
+						  You'll also note that the "Shutdown" button is now enabled.  Try it, and observe that your container shuts down in the shell.
+						  Restart it.</p></li><li><p>For fun, open another shell window and start another container server.  Verify the additional container is running in the Admin UI.
+						  Deploy a simple stream, and observe in the UI how the source and the sink get deployed to different containers.</p><p>Note if you run into issues, check the log files in the <code class="code">$XD_HOME/logs</code> directory.</p></li><li><p>Once you've verified your installation is running, shut down all the components.</p></li></ol></div></div></div></div><div xmlns="http://www.w3.org/TR/xhtml1/transitional" class="navfooter"><hr></hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="advanced-jobs-lab.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right">&nbsp;</td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;7.&nbsp;Advanced Jobs&nbsp;</td><td width="20%" align="center"><span style="color:white;font-size:90%;"><a href="http://www.spring.io" title="The Spring Framework">Spring By Pivotal</a></span></td><td width="40%" align="right" valign="top">&nbsp;</td></tr></table></div></body></html>

@@ -1,0 +1,111 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;1.&nbsp;Installing Spring XD</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.70.0"><link rel="start" href="index.html" title="Spring XD - Lab Documentation"><link rel="up" href="index.html" title="Spring XD - Lab Documentation"><link rel="prev" href="index.html" title="Spring XD - Lab Documentation"><link rel="next" href="introduction-to-streams-lab.html" title="Chapter&nbsp;2.&nbsp;Introduction to Streams"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div xmlns="http://www.w3.org/TR/xhtml1/transitional" style="background-color:white;border:none;height:73px;border:1px solid black;"><a style="border:none;" href="http://www.pivotal.io" title="Pivotal"><img style="border:none;" src="images/heading-logo-lhs.jpg"></img></a><a style="border:none;" href="http://www.spring.io" title="The Spring Framework"><img style="border:none;position:absolute;padding-top:5px;right:42px;" src="images/heading-logo-rhs.jpg"></img></a></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="installation-lab"></a>Chapter&nbsp;1.&nbsp;Installing Spring XD</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-lab-objective"></a>1.1.&nbsp;Objective</h2></div></div></div><p>To have a functioning version of Spring XD single-node instance installed and running on your workstation, and to be able to use 
+		      the Spring XD shell to successfully connect to it.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-lab-installation"></a>1.2.&nbsp;Installation</h2></div></div></div><p>For classroom purposes, you can run Spring XD in standalone mode on any platform that supports Java,
+        	such as Windows, Mac, Linux, etc..  For production instances, Pivotal recommends running on Linux-based operating systems.  For 
+			  Mac OSX, there is a Homebrew installation available, and Pivotal also provides a yum install for 
+			  RedHat/CentOS.  These latter repositories (Homebrew and Yum) may not contain the most recent 
+			  release - the latest version can always be obtained from the Spring XD project website.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="installation-lab-generic"></a>1.2.1.&nbsp;Generic Installation</h3></div></div></div><p>Since Spring XD is written in Java, it can be installed on essentially any platform that supports a JVM.
+				  Also, performing a generic installation (as opposed to using Homebrew or Yum) will result in getting 
+				  the latest version of the product running on your system.</p><div class="orderedlist"><ol type="1" compact><li><p>Download the latest version of Spring XD from the Spring website, <a href="http://projects.spring.io/spring-xd/" target="_top">http://projects.spring.io/spring-xd/</a>
+						  or  <a href="http://repo.spring.io/release/org/springframework/xd/spring-xd/1.1.0.RELEASE/spring-xd-1.1.0.RELEASE-dist.zip" target="_top">
+						  http://repo.spring.io/release/org/springframework/xd/spring-xd/1.1.0.RELEASE/spring-xd-1.1.0.RELEASE-dist.zip</a>.
+						  All releases can be found at <a href="http://repo.spring.io/release/org/springframework/xd/spring-xd/" target="_top">
+						  http://repo.spring.io/release/org/springframework/xd/spring-xd/</a>, there you will find
+						  subdirectories containing various builds.</p></li><li><p>Extract the archive into the directory of your choice.</p></li><li><p>Set the <code class="code">XD_HOME</code> environment variable to the <code class="code">xd</code> subdirectory of the installation:</p><p><code class="code">&lt;installation-directory&gt;/spring-xd-&lt;version&gt;.RELEASE/xd</code></p></li></ol></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="installation-lab-verification"></a>1.3.&nbsp;Verifying the Installation</h2></div></div></div><p>Now that you've completed the installation, let's verify that you can start the server and connect to it.</p><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="installation-lab-server-startup"></a>1.3.1.&nbsp;Starting the Spring XD Server</h3></div></div></div><div class="orderedlist"><ol type="1" compact><li><p>Start the server by running the <code class="code">xd-singlenode</code> server startup script.  On Windows you'll have to switch to the 
+						  <code class="code">&lt;installation-directory&gt;/spring-xd-&lt;version&gt;.RELEASE/xd/bin</code> directory first or provide
+						  the full path to the <code class="code">xd-singlenode.bat</code> batch file.  On a Linux-based system you can
+						  simply execute <code class="code">xd-singlenode</code>, assuming the script has execute permissions (chmod 777).</p><p>You should see the server start up, with the Spring XD ASCII-art logo output onto your console.</p><pre class="programlisting">C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd\bin&gt;xd-singlenode
+
+ _____                           __   _______
+/  ___|          (-)             \ \ / /  _  \
+\ `--. _ __  _ __ _ _ __   __ _   \ V /| | | |
+ `--. \ '_ \| '__| | '_ \ / _` |  / ^ \| | | |
+/\__/ / |_) | |  | | | | | (_| | / / \ \ |/ /
+\____/| .__/|_|  |_|_| |_|\__, | \/   \/___/
+      | |                  __/ |
+      |_|                 |___/
+1.1.0.RELEASE                    eXtreme Data
+
+
+Started : SingleNodeApplication
+Documentation: https://github.com/spring-projects/spring-xd/wiki
+
+17:12:00,906 1.1.0.RELEASE  INFO main server.SingleNodeApplication - Starting SingleNodeApplication v1.1.0.RELEASE on dbuchko1-e6420 with PID 1596 (C:\apps\spring-xd\spring-xd-1.0.
+3.RELEASE\xd\lib\spring-xd-dirt-1.1.0.RELEASE.jar started by dbuchko in C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd\bin)
+17:12:01,350 1.1.0.RELEASE  INFO main server.SingleNodeApplication - Started SingleNodeApplication in 0.934 seconds (JVM running for 1.225)
+[2015-01-05 17:12:06.777] boot - 1596  INFO [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:60284] --- ZooKeeperServer: Client attempting to establish new session at /0:0:0:0:0:0:0:1:55731
+[2015-01-05 17:12:06.777] boot - 1596  INFO [SyncThread:0] --- FileTxnLog: Creating new log file: log.1
+[2015-01-05 17:12:06.837] boot - 1596  INFO [SyncThread:0] --- ZooKeeperServer: Established session 0x14abc27b5770000 with negotiated timeout 60000 for client /0:0:0:0:0:0:0:1:5573
+1
+[2015-01-05 17:12:06.837] boot - 1596  INFO [main-SendThread(0:0:0:0:0:0:0:1:60284)] --- ClientCnxn: Session establishment complete on server 0:0:0:0:0:0:0:1/0:0:0:0:0:0:0:1:60284,
+ sessionid = 0x14abc27b5770000, negotiated timeout = 60000
+[2015-01-05 17:12:06.837] boot - 1596  INFO [main-EventThread] --- ConnectionStateManager: State change: CONNECTED
+17:12:12,427 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD Home: C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd
+17:12:12,427 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Transport: local
+17:12:12,427 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config location: file:C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd/config//
+17:12:12,427 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config names: servers,application
+17:12:12,427 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config location: file:C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd/config//modules/
+17:12:12,427 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config name: modules
+17:12:12,437 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Admin web UI: http://dbuchko1-e6420:9393/admin-ui
+17:12:12,437 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper at: localhost:60284
+17:12:12,437 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper namespace: xd
+17:12:12,437 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Analytics: memory
+17:12:12,477 1.1.0.RELEASE  INFO LeaderSelector-0 server.DeploymentSupervisor - Leader Admin singlenode:default,admin,singlenode,hsqldbServer:9393 is watching for stream/job deploy
+ment requests.
+17:12:12,497 1.1.0.RELEASE  INFO main server.AdminServerApplication - Started AdminServerApplication in 5.73 seconds (JVM running for 12.372)
+[2015-01-05 17:12:12.527] boot - 1596  INFO [DeploymentSupervisorCacheListener-0] --- ContainerListener: Path cache event: type=INITIALIZED
+17:12:14,690 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD Home: C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd
+17:12:14,691 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Transport: local
+17:12:14,691 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config location: file:C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd/config//
+17:12:14,692 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD config names: servers,application
+17:12:14,692 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config location: file:C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\xd/config//modules/
+17:12:14,693 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - XD module config name: modules
+17:12:14,693 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Hadoop Distro: hadoop22
+17:12:14,697 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Hadoop version detected from classpath: 2.2.0
+17:12:14,697 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper at: localhost:60284
+17:12:14,698 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Zookeeper namespace: xd
+17:12:14,698 1.1.0.RELEASE  INFO main util.XdConfigLoggingInitializer - Analytics: memory
+17:12:14,725 1.1.0.RELEASE  INFO main server.ContainerRegistrar - Container {groups=, host=dbuchko1-e6420, id=1698c0f3-7fc4-4230-8cf2-3f58d4417fb1, ip=10.74.17.227, pid=1596} joine
+d cluster
+17:12:14,728 1.1.0.RELEASE  INFO main server.ContainerServerApplication - Started ContainerServerApplication in 0.829 seconds (JVM running for 14.603)
+17:12:14,730 1.1.0.RELEASE  INFO DeploymentSupervisorCacheListener-0 server.ContainerListener - Path cache event: path=/containers/1698c0f3-7fc4-4230-8cf2-3f58d4417fb1, type=CHILD_
+ADDED
+17:12:14,733 1.1.0.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: type=INITIALIZED
+17:12:14,740 1.1.0.RELEASE  INFO DeploymentSupervisorCacheListener-0 server.ContainerListener - Container arrived: Container{name='1698c0f3-7fc4-4230-8cf2-3f58d4417fb1', attributes
+={groups=, host=dbuchko1-e6420, id=1698c0f3-7fc4-4230-8cf2-3f58d4417fb1, ip=10.74.17.227, pid=1596}}</pre><p>Find the installation directory (based on where you installed it above; see class slides for background). 
+					Take a look in the <code class="code">&lt;installation-directory&gt;/spring-xd-&lt;version&gt;.RELEASE/xd/logs</code>
+						  directory.  You should find a <code class="code">singlenode.log</code> log file there.  If you don't, verify
+						  that you set the <code class="code">XD_HOME</code> environment variable, and check the directory permissions.
+						  Examine the log file, noting the locations of the configuration files.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="installation-lab-shell"></a>1.3.2.&nbsp;Connecting to the Server</h3></div></div></div><div class="orderedlist"><ol type="1" compact><li><p>Let's start up the Spring XD shell client now.  Open a separate command prompt, and change to
+						  the <code class="code">&lt;installation-directory&gt;/spring-xd-&lt;version&gt;.RELEASE/shell/bin</code> directory,
+						  and launch the <code class="code">xd-shell</code> client.  You should again see the Spring XD ASCII-art logo,
+						  and the server you connected to.</p><pre class="programlisting">C:\apps\spring-xd\spring-xd-1.1.0.RELEASE\shell\bin&gt;xd-shell
+ _____                           __   _______
+/  ___|          (-)             \ \ / /  _  \
+\ `--. _ __  _ __ _ _ __   __ _   \ V /| | | |
+ `--. \ '_ \| '__| | '_ \ / _` |  / ^ \| | | |
+/\__/ / |_) | |  | | | | | (_| | / / \ \ |/ /
+\____/| .__/|_|  |_|_| |_|\__, | \/   \/___/
+      | |                  __/ |
+      |_|                 |___/
+eXtreme Data
+1.1.0.RELEASE | Admin Server Target: http://localhost:9393
+Welcome to the Spring XD shell. For assistance hit TAB or type "help".
+xd:&gt;</pre></li><li><p>From within the XD command shell, examine the list of commands available by typing <code class="code">help</code> at the prompt.  Note that the shell
+						offers tab-complete, so you can start to type a command and then hit &lt;tab&gt; to see a list of
+						options.  Try a couple simple commands, such as <code class="code">admin config info</code>, <code class="code">version</code>, and
+						<code class="code">stream list</code>.  What port, by default, does the single-node instance listen on?</p><pre class="programlisting">xd:&gt;admin config info
+  -------------  -------------------------------------------
+  Result         Successfully targeted http://localhost:9393
+  Target         http://localhost:9393
+  Timezone used  Eastern Standard Time (UTC -5:00)
+  -------------  -------------------------------------------
+
+xd:&gt;version
+1.1.0.RELEASE
+xd:&gt;stream list
+  Stream Name  Stream Definition  Status
+  -----------  -----------------  ------
+
+xd:&gt;</pre></li><li><p>Once you are finished, type <code class="code">exit</code> to leave the Spring XD shell.</p></li></ol></div></div></div></div><div xmlns="http://www.w3.org/TR/xhtml1/transitional" class="navfooter"><hr></hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="index.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="introduction-to-streams-lab.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Spring XD - Lab Documentation&nbsp;</td><td width="20%" align="center"><span style="color:white;font-size:90%;"><a href="http://www.spring.io" title="The Spring Framework">Spring By Pivotal</a></span></td><td width="40%" align="right" valign="top">&nbsp;Chapter&nbsp;2.&nbsp;Introduction to Streams</td></tr></table></div></body></html>

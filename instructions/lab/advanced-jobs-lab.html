@@ -1,0 +1,86 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;7.&nbsp;Advanced Jobs</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.70.0"><link rel="start" href="index.html" title="Spring XD - Lab Documentation"><link rel="up" href="index.html" title="Spring XD - Lab Documentation"><link rel="prev" href="customizing-jobs-lab.html" title="Chapter&nbsp;6.&nbsp;Customizing Jobs"><link rel="next" href="distributed-mode-lab.html" title="Chapter&nbsp;8.&nbsp;Installing Spring XD in Distributed Mode"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div xmlns="http://www.w3.org/TR/xhtml1/transitional" style="background-color:white;border:none;height:73px;border:1px solid black;"><a style="border:none;" href="http://www.pivotal.io" title="Pivotal"><img style="border:none;" src="images/heading-logo-lhs.jpg"></img></a><a style="border:none;" href="http://www.spring.io" title="The Spring Framework"><img style="border:none;position:absolute;padding-top:5px;right:42px;" src="images/heading-logo-rhs.jpg"></img></a></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="advanced-jobs-lab"></a>Chapter&nbsp;7.&nbsp;Advanced Jobs</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="advanced-jobs-lab-objective"></a>7.1.&nbsp;Objective</h2></div></div></div><p>To configure Spring XD to connect to an Hadoop instance, and create, deploy, and run
+			  a simple job that ingests data into HDFS.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="advanced-jobs-lab-hdfs-setup"></a>7.2.&nbsp;Setting Up Hadoop</h2></div></div></div><p>This section will cover Hadoop configuration, and how to set up Spring XD to connect to your Hadoop instance.</p><div class="orderedlist"><ol type="1" compact><li><p>This lab assumes you are have a copy of the Pivotal Hadoop single-node environment VM, which
+					  is available at <a href="https://network.gopivotal.com/products/pivotal-hd" target="_top">https://network.gopivotal.com/products/pivotal-hd</a>.
+					  Follow the instructions at <a href="https://github.com/spring-projects/spring-xd/wiki/Using-Hadoop-VMs-with-Spring-XD#pivotal-hd-single-node-vm" target="_top">https://github.com/spring-projects/spring-xd/wiki/Using-Hadoop-VMs-with-Spring-XD#pivotal-hd-single-node-vm</a>,
+					  which involves editing the <code class="code">/etc/hosts</code> file to bind the host name to the proper IP associated
+					  with the external facing NIC (as opposed to the loopback interface).  You should also modify
+					  your client <code class="code">/etc/hosts</code> file to resolve the <code class="code">pivhdsne</code> hostname.  Finally,
+					  if you cannot connect, make sure that you do not have any firewall rules blocking the connection
+					  to your hadoop server.</p><p>You can also use the Apache Hadoop distribution, and configure it to run on a single node
+					  as per the instructions at <a href="http://hadoop.apache.org/docs/r2.5.1/hadoop-project-dist/hadoop-common/SingleCluster.html" target="_top">http://hadoop.apache.org/docs/r2.5.1/hadoop-project-dist/hadoop-common/SingleCluster.html</a>.
+					  There are also a few ready-to-use Hadoop VM's from other vendors that will work.  Keep
+					  in mind if you do use a different distribution, you will have to provide the appropriate
+					  <code class="code">--hadoopDistro</code> command line option in Spring XD.</p><p>You will also need to create the Spring XD HDFS directory.  This is typically done by executing the
+					  following commands on Hadoop, after you've started up the server:</p><pre class="programlisting">sudo -u hdfs hdfs dfs -mkdir /xd
+sudo -u hdfs hdfs dfs -chmod 777 /xd</pre><p>It will also be necessary to enable append in HDFS, to run some of the built-in Spring XD
+					  jobs.  This is typically done by updating the Hadoop <code class="code">hdfs-site.xml</code> file with
+					  the following settings:</p><pre class="programlisting">    &lt;property&gt;
+        &lt;name&gt;dfs.support.append&lt;/name&gt;
+        &lt;value&gt;true&lt;/value&gt;
+    &lt;/property&gt;</pre><p>Again, depending on the particular version of Hadoop you are using, these instructions may differ slightly.
+					  Refer to the following pages for additional help if necessary:</p><div class="itemizedlist"><ul type="disc"><li><a href="https://github.com/spring-projects/spring-xd/wiki/Using-Hadoop-VMs-with-Spring-XD" target="_top">https://github.com/spring-projects/spring-xd/wiki/Using-Hadoop-VMs-with-Spring-XD</a></li><li><a href="https://github.com/spring-projects/spring-xd/wiki/Hadoop-Installation" target="_top">https://github.com/spring-projects/spring-xd/wiki/Hadoop-Installation</a></li></ul></div></li><li><p>Open the <code class="code">servers.yml</code> configuration file in a text editor, and find the "Hadoop properties" section.
+					  Set the host name and port of the <code class="code">spring.hadoop.fsUrl</code> property to the namenode of your
+					  Hadoop distribution.  For Pivotal HD, the entry is as follows:</p><pre class="programlisting">spring:
+  hadoop:
+   fsUri: hdfs://pivhdsne:8020</pre></li><li><p>Start the Spring XD single-node instance.  This time, however, add the appropriate 
+					  <code class="code">--hadoopDistro</code> command line option.  If using Pivotal Hadoop, the command line
+					  will be as follows:</p><pre class="programlisting">$ bin/xd-singlenode --hadoopDistro phd21</pre><p>You should see a corresponding entry in the Spring XD startup log showing the Hadoop version.</p><pre class="programlisting">11:49:59,026 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Hadoop Distro: phd21
+11:49:59,029 1.0.3.RELEASE  INFO main util.XdConfigLoggingInitializer - Hadoop version detected from classpath: 2.2.0-gphd-3.1.0.0</pre></li><li><p>Once your Spring XD server is up and running, let's go ahead and get the shell ready to
+					  create some HDFS streams.  Start by launching the shell with the same <code class="code">--hadoopDistro</code>
+					  command line option you used to start the server.  Don't forget to adjust the parameter
+					  accordingly for the Hadoop distribution you are using.</p><pre class="programlisting">$ bin/xd-shell --hadoopDistro phd21</pre></li><li><p>Before the shell can work with Hadoop, we have to tell it where to find the Hadoop namenode.
+					  We do that be executing the following command:</p><pre class="programlisting">xd:&gt;hadoop config fs --namenode hdfs://pivhdsne:8020</pre><p>Verify your connection by executing the <code class="code">hadoop fs ls /</code> command.  You should
+					  see the root HDFS directory listing.  Verify that the <code class="code">xd</code> subdirectory
+					  exists and is writeable.  Note how it is possible to execute Hadoop commands from the
+					  Spring XD shell by prefixing them with the <code class="code">hadoop</code> keyword.</p><pre class="programlisting">xd:&gt;hadoop fs ls /
+Hadoop configuration changed, re-initializing shell...
+Found 8 items
+drwxr-xr-x   - hdfs    hadoop          0 2014-08-23 20:54 /apps
+drwxr-xr-x   - gpadmin hadoop          0 2014-08-23 21:02 /hawq_data
+drwxr-xr-x   - hdfs    hadoop          0 2014-08-23 20:56 /hive
+drwxr-xr-x   - mapred  hadoop          0 2014-08-23 20:55 /mapred
+drwxrwxrwx   - hdfs    hadoop          0 2014-08-23 20:55 /tmp
+drwxrwxrwx   - hdfs    hadoop          0 2014-08-23 21:10 /user
+<span class="emphasis"><em>drwxrwxrwx   - hdfs    hadoop          0 2015-01-22 12:03 /xd</em></span>
+drwxr-xr-x   - hdfs    hadoop          0 2014-08-23 20:56 /yarn
+xd:&gt;</pre><p>At this point, you have a functioning Hadoop instance you can connect to from Spring XD.
+					  Let's now see how we can ingest some data into it.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="advanced-jobs-lab-filepollhdfs"></a>7.3.&nbsp;Ingesting CSV Files into HDFS</h2></div></div></div><p>Now you will learn how to use the pre-defined <code class="code">filepollhdfs</code> job that copies CSV files into HDFS.
+			  The job included is triggered by a stream, and does a straight file copy.  Later we will see how to 
+			  customize it to make it more realistic for actual use cases.</p><div class="orderedlist"><ol type="1" compact><li><p>First, create and save the CSV files that you want to import. You can use the following contents,
+					  or create your own.  (Just pay close attention to the field names in the file that you use.)</p><p><code class="code">orders-20150107.csv</code></p><pre class="programlisting">orderid,customerid,orderitemcount,ordertotal
+4434,84661,4,123.88
+4435,11465,2,75.33
+4436,88424,10,422.85</pre><p><code class="code">orders-20150108.csv</code></p><pre class="programlisting">orderid,customerid,orderitemcount,ordertotal
+4782,77546,2,69.48
+4783,34464,7,310.22
+4784,51114,1,22.87
+4785,15746,4,148.55</pre><p><code class="code">orders-20150109.csv</code></p><pre class="programlisting">orderid,customerid,orderitemcount,ordertotal
+4933,24841,5,105.55
+4934,88464,2,40.21
+4935,84874,4,77.97
+4936,94414,6,118.22</pre></li><li><p>The pre-defined <code class="code">filepollhdfs</code> job requires you explicitly specify the names of
+					  fields in your CSV file, as it generates tuples that can be used later in the job processing
+					  steps.  The option required is <code class="code">--names</code>, followed by a comma-delimited list
+					  of fields.</p><p>If you are sharing an HDFS instance with other students, each of you must use a unique job
+					  name in order to not conflict with each other.  Spring XD uses the job name as the subdirectory
+					  name in HDFS, so each student will have their own subdirectory under <code class="code">/xd</code> that
+					  contains their copied CSV files.</p><p>Go ahead and create and deploy your job from the XD shell.</p><pre class="programlisting">xd:&gt;job create orders --definition "filepollhdfs --names=orderid,customerid,orderitemcount,ordertotal" --deploy
+Successfully created and deployed job 'ordersjob1'</pre></li><li><p>Now you need something to trigger the job, so lets go ahead and create a stream to do this.</p><p>The Spring XD Domain Specific Language (DSL) allows you to specify a job to act as a 
+					  sink for a stream definition.  So you need to create a stream that uses the file source, and 
+					  sends the name of the file to the input queue that triggers the job we just created.
+					  The directory and indicator to send just the file reference (and not the contents itself)
+					  must be specified as an option to the file source using the <code class="code">--dir</code> and 
+					  <code class="code">--ref</code> directives.  In addition, you can also specify the pattern (<code class="code">--pattern</code>)
+					  so that only CSV files are picked up.  Don't forget to deploy the job.</p><pre class="programlisting">xd:&gt;stream create ordersJobTrigger --definition "file --ref=true --dir=/tmp/orders --pattern=*.csv &gt; queue:job:ordersjob1" --deploy
+Created and deployed new stream 'ordersJobTrigger'</pre><p>Take a look in the Admin UI and see that your stream and job have been deployed.</p></li><li><p>Trigger the job execution by copying one of CSV files into the source directory you specified
+					  when you created the stream.  Go to the "Executions" section of the "Jobs" tab in the Admin
+					  UI, you should see that your job has executed successfully.  From the XD shell, use the 
+					  <code class="code">job execution list</code> command to observe the same results.  Use the
+					  <code class="code">hadoop fs ls</code> command to see that the file was successfully copied to HDFS.</p><pre class="programlisting">xd:&gt;hadoop fs ls /xd/ordersjob1
+Found 1 items
+-rw-r--r--   3 student hadoop        105 2015-01-26 14:33 /xd/ordersjob1/ordersjob1-0.csv
+xd:&gt;</pre></li><li><p>Go ahead and copy the other 2 files into the source directory, and examine the results
+					  in the Admin UI.  Try submitting a badly formatted file, and check the results.  See if
+					  you can find the stack trace in the UI.</p></li></ol></div><p>That's it, you've created your first Spring XD batch job!</p></div></div><div xmlns="http://www.w3.org/TR/xhtml1/transitional" class="navfooter"><hr></hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="customizing-jobs-lab.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="distributed-mode-lab.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;6.&nbsp;Customizing Jobs&nbsp;</td><td width="20%" align="center"><span style="color:white;font-size:90%;"><a href="http://www.spring.io" title="The Spring Framework">Spring By Pivotal</a></span></td><td width="40%" align="right" valign="top">&nbsp;Chapter&nbsp;8.&nbsp;Installing Spring XD in Distributed Mode</td></tr></table></div></body></html>

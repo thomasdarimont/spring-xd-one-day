@@ -1,0 +1,121 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;2.&nbsp;Introduction to Streams</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.70.0"><link rel="start" href="index.html" title="Spring XD - Lab Documentation"><link rel="up" href="index.html" title="Spring XD - Lab Documentation"><link rel="prev" href="installation-lab.html" title="Chapter&nbsp;1.&nbsp;Installing Spring XD"><link rel="next" href="customizing-streams-lab.html" title="Chapter&nbsp;3.&nbsp;Customizing Streams"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div xmlns="http://www.w3.org/TR/xhtml1/transitional" style="background-color:white;border:none;height:73px;border:1px solid black;"><a style="border:none;" href="http://www.pivotal.io" title="Pivotal"><img style="border:none;" src="images/heading-logo-lhs.jpg"></img></a><a style="border:none;" href="http://www.spring.io" title="The Spring Framework"><img style="border:none;position:absolute;padding-top:5px;right:42px;" src="images/heading-logo-rhs.jpg"></img></a></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="introduction-to-streams-lab"></a>Chapter&nbsp;2.&nbsp;Introduction to Streams</h2></div></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introduction-to-streams-lab-objective"></a>2.1.&nbsp;Objective</h2></div></div></div><p>To explore creating, deploying, and running some simple streams in Spring XD.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introduction-to-streams-lab-simple-time-logger"></a>2.2.&nbsp;A Simple Time Logger</h2></div></div></div><p>Let's begin by creating a very simple time logger stream.  You should already have a running (standalone)
+        	  instance of Spring XD.</p><div class="orderedlist"><ol type="1" compact><li><p>Open a Spring XD shell that is connected to your running server.  If you get stuck at
+					  any time, remember that you can enter <code class="code">help</code>, or hit &lt;tab&gt; in the shell 
+					  for autocomplete.</p></li><li><p>Create a stream consisting of a time source connected directly to a log sink.
+					  Don't forget to give your stream a name.  Verify the stream was created by
+					  running the <code class="code">stream list</code> command.  Note the status of the stream.</p></li><li><p>Make sure that you can see the Spring XD server output in the background, and
+					  go ahead and deploy your stream.  You should observe the time logging in the server
+					  window.  What is the default frequency of the time source?</p><p>Run the <code class="code">stream list</code> command again.  What is the status of the stream now?</p></li><li><p>Undeploy and delete the stream by executing the <code class="code">stream destroy</code> command.
+					  Once again, verify the stream is gone by checking the status.</p></li><li><p>Now, let's demonstrate how to pass in options to the the modules.  Create a new
+					  stream with the time source and log sink, but this time change the interval from
+					  1 second to 10 seconds.  If you don't remember how to do this, go back to the
+					  slide notes to check, or check the sources documentation found at
+					  <a href="http://docs.spring.io/spring-xd/docs/current/reference/html/#time" target="_top">
+					  http://docs.spring.io/spring-xd/docs/current/reference/html/#time</a>.  
+					  Deploy and test your new stream, verifying that it logs every 10 seconds now.
+					  When you are finished you can destroy it.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introduction-to-streams-lab-using-processors"></a>2.3.&nbsp;Using Processors</h2></div></div></div><p>Now that you are familiar with deploying a simple stream, and specifying options for 
+        	  the stream modules, let's add some processing to a stream.  This time we will use an
+        	  HTTP source that will receive a JSON order summary payload, and filter out orders with
+        	  without a country code of "US".  All orders with a "US" countryCode will get written to
+        	  a file.</p><div class="orderedlist"><ol type="1" compact><li><p>From the Spring XD shell, create and deploy a stream with an HTTP source, a filter Spring
+					  Expression Language (SpEL) processor, and a file sink.  You will use the jsonPath
+					  SpEL method to extract the <code class="code">countryCode</code> field, and discard any order payloads 
+					  that do not have a country code of US.</p><p>The HTTP source should listen on port 9090.</p><p>To specify an SpEL on a filter processor, use the <code class="code">--expression</code> option.
+					  The payload of the HTTP post is represented by the <code class="code">payload</code> variable.
+					  So the format of the processor module you need to create will be:</p><pre class="programlisting">filter --expression=#jsonPath(payload,'$.countryCode').equals('US')</pre><p>Change the directory of the output file to a temporary location (eg. /tmp), and be sure to 
+					  append orders to the file.  Refer to the online documentation for the file sink found here:
+					  <a href="http://docs.spring.io/spring-xd/docs/current/reference/html/#file-sink" target="_top">http://docs.spring.io/spring-xd/docs/current/reference/html/#file-sink</a></p></li><li><p>The Spring XD shell includes a utility that will post an HTTP payload to a URL.  You can use
+					  the following example to post some sample orders to your stream for testing:</p><pre class="programlisting">http post --target http://localhost:9090 --data "{\"id\":\"2773\",\"countryCode\":\"US\",\"orderAmt\":\"100\"}"</pre><p>Post several order payloads, changing the order number and alternating between US and non-US 
+					  country codes.</p><p>Examine the contents of the output file created in the temporary directory.  What is the
+					  name of the file that was created?  You should only see orders with US country codes
+					  in the file, if your stream is functioning correctly.</p><p>If you have time, feel free to experiment with some of the different options for
+					  the modules.</p></li></ol></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="introduction-to-streams-lab-solutions"></a>2.4.&nbsp;Solutions</h2></div></div></div><div class="orderedlist"><ol type="1" compact><li><p>Simple Time Logger - Spring XD shell input:</p><pre class="programlisting">xd:&gt;stream create --definition "time | log" --name timer
+Created new stream 'timer'
+xd:&gt;stream list
+  Stream Name  Stream Definition  Status
+  -----------  -----------------  ----------
+  timer        time | log         undeployed
+
+xd:&gt;stream deploy --name timer 
+Deployed stream 'timer'
+xd:&gt;stream list
+  Stream Name  Stream Definition  Status
+  -----------  -----------------  --------
+  timer        time | log         deployed
+
+xd:&gt;stream undeploy --name timer
+Un-deployed stream 'timer'
+xd:&gt;stream list
+  Stream Name  Stream Definition  Status
+  -----------  -----------------  ----------
+  timer        time | log         undeployed
+
+xd:&gt;stream destroy timer
+Destroyed stream 'timer'</pre><pre class="programlisting">xd:&gt;stream create --definition "time --fixedDelay=10 | log" --name timer --deploy
+Created and deployed new stream 'timer'
+xd:&gt;stream destroy timer
+Destroyed stream 'timer'
+xd:&gt;</pre><p>Simple Time Logger - Spring XD server log output:</p><pre class="programlisting">16:20:30,866 1.0.3.RELEASE  INFO DeploymentSupervisorCacheListener-0 server.InitialDeploymentListener - Path cache event: path=/deployments/streams/timer, type=CHILD_ADDED
+16:20:31,006 1.0.3.RELEASE  INFO Deployer server.StreamDeploymentListener - Deploying stream Stream{name='timer'}
+16:20:31,032 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.sink.log.1, type=CHILD_ADDED
+16:20:31,032 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module 'log' for stream 'timer'
+16:20:31,111 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module [ModuleDescriptor@5cdf3c40 moduleName = 'log', moduleLabel = 'log', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 1, type = sink, parameters = map[[empty]], children = list[[empty]]]
+16:20:31,728 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.source.time.1, type=CHILD_ADDED
+16:20:31,729 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module 'time' for stream 'timer'
+16:20:31,852 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module [ModuleDescriptor@364fd7e2 moduleName = 'time', moduleLabel = 'time', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 0, type = source, parameters = map[[empty]], children = list[[empty]]]
+16:20:32,282 1.0.3.RELEASE  INFO task-scheduler-2 sink.timer - 2015-01-21 16:20:32
+16:20:32,293 1.0.3.RELEASE  INFO Deployer server.StreamDeploymentListener - Deployment status for stream 'timer': DeploymentStatus{state=deployed}
+16:20:32,296 1.0.3.RELEASE  INFO Deployer server.StreamDeploymentListener - Stream Stream{name='timer'} deployment attempt complete
+16:20:33,291 1.0.3.RELEASE  INFO task-scheduler-3 sink.timer - 2015-01-21 16:20:33
+16:20:34,298 1.0.3.RELEASE  INFO task-scheduler-5 sink.timer - 2015-01-21 16:20:34
+16:20:35,302 1.0.3.RELEASE  INFO task-scheduler-6 sink.timer - 2015-01-21 16:20:35
+16:20:36,305 1.0.3.RELEASE  INFO task-scheduler-7 sink.timer - 2015-01-21 16:20:36
+.
+.
+.
+16:20:56,401 1.0.3.RELEASE  INFO task-scheduler-8 sink.timer - 2015-01-21 16:20:56
+16:20:56,703 1.0.3.RELEASE  INFO main-EventThread server.DeploymentListener - Undeploying module [ModuleDescriptor@364fd7e2 moduleName = 'time', moduleLabel = 'time', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 0, type = source, parameters = map[[empty]], children = list[[empty]]]
+16:20:56,722 1.0.3.RELEASE  INFO main-EventThread server.DeploymentListener - Undeploying module [ModuleDescriptor@5cdf3c40 moduleName = 'log', moduleLabel = 'log', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 1, type = sink, parameters = map[[empty]], children = list[[empty]]]
+16:20:56,742 1.0.3.RELEASE  INFO DeploymentSupervisorCacheListener-0 server.InitialDeploymentListener - Path cache event: path=/deployments/streams/timer, type=CHILD_REMOVED
+16:20:56,742 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.source.time.1, type=CHILD_REMOVED
+16:20:56,745 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.sink.log.1, type=CHILD_REMOVED</pre><pre class="programlisting">21:54:21,904 1.0.3.RELEASE  INFO DeploymentSupervisorCacheListener-0 server.InitialDeploymentListener - Path cache event: path=/deployments/streams/timer, type=CHILD_ADDED
+21:54:22,285 1.0.3.RELEASE  INFO Deployer server.StreamDeploymentListener - Deploying stream Stream{name='timer'}
+21:54:22,413 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.sink.log.1, type=CHILD_ADDED
+21:54:22,429 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module 'log' for stream 'timer'
+21:54:22,899 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module [ModuleDescriptor@4fbaa936 moduleName = 'log', moduleLabel = 'log', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 1, type = sink, parameters = map[[empty]], children = list[[empty]]]
+21:54:23,943 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.source.time.1, type=CHILD_ADDED
+21:54:23,943 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module 'time' for stream 'timer'
+21:54:24,109 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Deploying module [ModuleDescriptor@6157824e moduleName = 'time', moduleLabel = 'time', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 0, type = source, parameters = map['fixedDelay' -&gt; '10'], children = list[[empty]]]
+21:54:24,612 1.0.3.RELEASE  INFO Deployer server.StreamDeploymentListener - Deployment status for stream 'timer': DeploymentStatus{state=deployed}
+21:54:24,622 1.0.3.RELEASE  INFO Deployer server.StreamDeploymentListener - Stream Stream{name='timer'} deployment attempt complete
+21:54:24,628 1.0.3.RELEASE  INFO task-scheduler-3 sink.timer - 2015-01-21 21:54:24
+21:54:34,634 1.0.3.RELEASE  INFO task-scheduler-3 sink.timer - 2015-01-21 21:54:34
+21:54:44,638 1.0.3.RELEASE  INFO task-scheduler-3 sink.timer - 2015-01-21 21:54:44
+21:54:54,682 1.0.3.RELEASE  INFO task-scheduler-2 sink.timer - 2015-01-21 21:54:54
+21:55:04,697 1.0.3.RELEASE  INFO task-scheduler-2 sink.timer - 2015-01-21 21:55:04
+21:55:05,524 1.0.3.RELEASE  INFO main-EventThread server.DeploymentListener - Undeploying module [ModuleDescriptor@6157824e moduleName = 'time', moduleLabel = 'time', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 0, type = source, parameters = map['fixedDelay' -&gt; '10'], children = list[[empty]]]
+21:55:05,550 1.0.3.RELEASE  INFO main-EventThread server.DeploymentListener - Undeploying module [ModuleDescriptor@4fbaa936 moduleName = 'log', moduleLabel = 'log', group = 'timer', sourceChannelName = [null], sinkChannelName = [null], sinkChannelName = [null], index = 1, type = sink, parameters = map[[empty]], children = list[[empty]]]
+21:55:05,571 1.0.3.RELEASE  INFO DeploymentSupervisorCacheListener-0 server.InitialDeploymentListener - Path cache event: path=/deployments/streams/timer, type=CHILD_REMOVED
+21:55:05,571 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.source.time.1, type=CHILD_REMOVED
+21:55:05,573 1.0.3.RELEASE  INFO DeploymentsPathChildrenCache-0 server.DeploymentListener - Path cache event: path=/deployments/modules/allocated/ce4b85c6-6d97-4074-8827-f5901d44f366/timer.sink.log.1, type=CHILD_REMOVED</pre></li><li><p>Using Processors - Spring XD shell input:</p><pre class="programlisting">xd:&gt;stream create --name orderFilter --definition "http --port=9090 | 
+filter --expression=#jsonPath(payload,'$.countryCode').equals('US') |
+file --dir=/tmp --mode=APPEND" --deploy
+Created and deployed new stream 'orderFilter'
+xd:&gt;http post --target http://localhost:9090 --data "{\"id\":\"2773\",\"countryCode\":\"US\",\"orderAmt\":\"100\"}"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9090 {"id":"2773","countryCode":"US","orderAmt":"100"}
+&gt; 200 OK
+
+xd:&gt;http post --target http://localhost:9090 --data "{\"id\":\"2774\",\"countryCode\":\"CA\",\"orderAmt\":\"125\"}"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9090 {"id":"2774","countryCode":"CA","orderAmt":"125"}
+&gt; 200 OK
+
+xd:&gt;http post --target http://localhost:9090 --data "{\"id\":\"2775\",\"countryCode\":\"US\",\"orderAmt\":\"110\"}"
+&gt; POST (text/plain;Charset=UTF-8) http://localhost:9090 {"id":"2775","countryCode":"US","orderAmt":"110"}
+&gt; 200 OK
+
+xd:&gt;</pre><p>Using Processors - Output:</p><pre class="programlisting">$ more /tmp/orderFilter.out 
+{"id":"2773","countryCode":"US"}
+{"id":"2775","countryCode":"US"}
+$</pre></li></ol></div></div></div><div xmlns="http://www.w3.org/TR/xhtml1/transitional" class="navfooter"><hr></hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="installation-lab.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="customizing-streams-lab.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;1.&nbsp;Installing Spring XD&nbsp;</td><td width="20%" align="center"><span style="color:white;font-size:90%;"><a href="http://www.spring.io" title="The Spring Framework">Spring By Pivotal</a></span></td><td width="40%" align="right" valign="top">&nbsp;Chapter&nbsp;3.&nbsp;Customizing Streams</td></tr></table></div></body></html>
