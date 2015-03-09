@@ -9,12 +9,17 @@
 				</p><p>
 </p><pre class="programlisting">xd:
   customModule:
-    home: file:///Users/glennrenfro/empty/xd-custom-modules</pre><p>
+    home: file:///Users/glennrenfro/empty/xd-custom-modules
+    -or-
+    home: file://c:/project/customModules</pre><p>
 				</p><p>Restart the Spring-XD server to pick up the changes.</p></li><li><p>Now, we will build the custom processor.  Change to the <code class="code">payload-conversion</code> lab project directory,
 					  and execute</p><pre class="programlisting">mvn clean package</pre><p>Verify the project built successfully by checking the <code class="code">jar</code> file was created in the 
-					  <code class="code">target</code> subdirectory.</p></li><li><p>Launch the XD shell, and use the <code class="code">module upload</code> command to upload the module JAR file into the custom repository.</p><pre class="programlisting">xd:&gt;module upload --name payload-conversion --type processor target\payload-conversion-1.0.0.BUILD-SNAPSHOT.jar
+					  <code class="code">target</code> subdirectory.</p></li><li><p>Launch the XD shell, and use the <code class="code">module upload</code> command to upload the module JAR file into the custom repository.</p><pre class="programlisting">xd:&gt;module upload --name payload-conversion --type processor $LAB_HOME/
+labs/payload-conversion/target/payload-conversion-1.0.0.BUILD-SNAPSHOT.jar
 Successfully uploaded module 'processor:payload-conversion'
-xd:&gt;</pre></li><li><p>Verify the module was successfully uploaded by finding it in the output of the <code class="code">module list</code>.</p></li><li><p>Take a look at the contents of the custom modules directory, and see that the jar file
+-or-
+xd:&gt;module upload --name payload-conversion --type processor c:/$LAB_HOME/
+labs/payload-conversion/target/payload-conversion-1.0.0.BUILD-SNAPSHOT.jar</pre></li><li><p>Verify the module was successfully uploaded by finding it in the output of the <code class="code">module list</code>.</p></li><li><p>Take a look at the contents of the custom modules directory, and see that the jar file
 					  has been copied there.</p></li><li><p>Now use the XD shell to create a stream using the custom module:</p><pre class="programlisting">xd:&gt;stream create --name test --definition "http | payload-conversion --inputType=application/x-xd-tuple | file" --deploy
 Created and deployed new stream 'test'
 xd:&gt;</pre></li><li><p>Test the stream by posting some JSON content to the HTTP source:</p><pre class="programlisting">xd:&gt;http post --data {"symbol":"FAKE","price":75} --contentType "application/json"</pre><p>Check the output of the stream, but dumping the contents of the output file.  On Mac OSX and Linux, enter:</p><pre class="programlisting">xd:&gt;! cat /tmp/xd/output/test.out</pre><p>On Mac Windows, enter:</p><pre class="programlisting">xd:&gt;! cat /temp/xd/output/test.out</pre><p>You should observe the following output of the file:</p><pre class="programlisting">{"id":"719f5276-22d2-434d-87dc-39a23a978077","timestamp":1376387174881,"symbol":"FAKE","price":"75"}</pre><p>Note the tuple conversion has added <code class="code">id</code> and <code class="code">timestamp</code> fields.  What has occurred is that
